@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>VIP 🔞</title>
+<style>
+body{
+  background:#0f0f0f;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+  padding:40px;
+}
+.container{
+  max-width:400px;
+  margin:auto;
+}
+img{
+  width:120px;
+  border-radius:50%;
+}
+h1{
+  margin:15px 0;
+}
+a{
+  display:block;
+  background:#ff2d75;
+  color:white;
+  padding:15px;
+  margin:10px 0;
+  text-decoration:none;
+  border-radius:12px;
+  font-weight:bold;
+  transition:.2s;
+}
+a:hover{
+  background:#ff5a95;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<img src="https://via.placeholder.com/120" alt="foto">
+
+<h1>VIP 🔞</h1>
+<p>Acesse os conteúdos abaixo 👇</p>
+
+<a href="#">🔥 Conteúdo VIP</a>
+<a href="#">💌 Grupo privado</a>
+<a href="#">🎥 Vídeos exclusivos</a>
+<a href="#">💎 Assinatura</a>
+
+</div>
+</body>
+</html>
