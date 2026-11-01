@@ -32,3 +32,260 @@
   .neg{color:#ff6b6b}
   .pos{color:#4ade80}
   .saldo{text-align:center;font-size:28px;font-weight:700;margin:6px 0}
+  .resumo{text-align:center;color:#888;font-size:13px}
+  h2{margin:0 0 8px;font-size:16px}
+  .rodape{text-align:center;color:#666;font-size:12px;margin-top:8px}
+  .vazio{text-align:center;color:#888;padding:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💰 Minhas Finanças</h1>
+
+  <div class="nav">
+    <button onclick="mudarMes(-1)" title="Mês anterior">◀</button>
+    <div class="mes" id="mes-label"></div>
+    <button onclick="mudarMes(1)" title="Próximo mês">▶</button>
+    <button class="hoje" onclick="irHoje()">Hoje</button>
+  </div>
+
+  <div class="card">
+    <h2>Saldo do mês</h2>
+    <div class="saldo" id="saldo"></div>
+    <div class="resumo" id="resumo"></div>
+  </div>
+
+  <div id="blocos"></div>
+
+  <button class="add" onclick="novoBloco()">+ Novo bloco</button>
+  <div id="copiar"></div>
+
+  <div class="rodape">As alterações ficam salvas neste aparelho e navegador.</div>
+</div>
+
+<script>
+  const KEY = "financas-v2";
+  const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+  const SEED_NOV_2026 = {
+    blocos: [
+      {titulo:"Despesas", tipo:"despesa", itens:[
+        {nome:"Devendo", valor:5555},
+        {nome:"Fisio", valor:440},
+        {nome:"Internet", valor:440},
+        {nome:"Cartão", valor:1210},
+        {nome:"Empréstimo", valor:1500},
+        {nome:"IPTU", valor:1090},
+        {nome:"Luz", valor:880},
+        {nome:"Mercado Livre", valor:131.26},
+        {nome:"Remédio", valor:400}
+      ]},
+      {titulo:"Receitas", tipo:"receita", itens:[
+        {nome:"Aluguel", valor:4000},
+        {nome:"Manuela", valor:150},
+        {nome:"Salário", valor:3500},
+        {nome:"INSS", valor:1900},
+        {nome:"Salário", valor:9500},
+        {nome:"Devendo", valor:-1230}
+      ]}
+    ]
+  };
+
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const chave = (a, m) => a + "-" + String(m + 1).padStart(2, "0");
+  const brl = v => v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+  const soma = itens => itens.reduce((t, i) => t + (Number(i.valor) || 0), 0);
+
+  let dados = null;
+  try { dados = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
+  if (!dados || typeof dados.meses !== "object") {
+    dados = {meses:{}};
+    // Aproveita edições da versão anterior, se existirem
+    try {
+      const v1 = JSON.parse(localStorage.getItem("financas-v1"));
+      if (v1 && Array.isArray(v1.despesas) && Array.isArray(v1.receitas)) {
+        dados.meses["2026-11"] = {blocos:[
+          {titulo:"Despesas", tipo:"despesa", itens:v1.despesas},
+          {titulo:"Receitas", tipo:"receita", itens:v1.receitas}
+        ]};
+      }
+    } catch(e) {}
+    if (!dados.meses["2026-11"]) dados.meses["2026-11"] = clone(SEED_NOV_2026);
+  }
+
+  const salvar = () => { try { localStorage.setItem(KEY, JSON.stringify(dados)); } catch(e) {} };
+
+  const hoje = new Date();
+  let ano = hoje.getFullYear(), mes = hoje.getMonth();
+
+  function atual() {
+    const k = chave(ano, mes);
+    if (!dados.meses[k]) dados.meses[k] = {blocos:[]};
+    return dados.meses[k];
+  }
+
+  function mudarMes(delta) {
+    mes += delta;
+    if (mes < 0) { mes = 11; ano--; }
+    if (mes > 11) { mes = 0; ano++; }
+    render();
+  }
+  function irHoje() { ano = hoje.getFullYear(); mes = hoje.getMonth(); render(); }
+
+  function totais() {
+    let d = 0, r = 0;
+    atual().blocos.forEach(b => {
+      if (b.tipo === "receita") r += soma(b.itens); else d += soma(b.itens);
+    });
+    const s = r - d;
+    const el = document.getElementById("saldo");
+    el.textContent = brl(s);
+    el.className = "saldo " + (s >= 0 ? "pos" : "neg");
+    document.getElementById("resumo").textContent = "Receitas " + brl(r) + " − Despesas " + brl(d);
+  }
+
+  function render() {
+    document.getElementById("mes-label").textContent = MESES[mes] + " " + ano;
+    const box = document.getElementById("blocos");
+    box.innerHTML = "";
+    const m = atual();
+
+    if (m.blocos.length === 0) {
+      const v = document.createElement("div");
+      v.className = "card vazio";
+      v.textContent = "Nenhum bloco neste mês ainda.";
+      box.append(v);
+    }
+
+    m.blocos.forEach((b, bi) => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      // Cabeçalho do bloco
+      const head = document.createElement("div");
+      head.className = "head";
+
+      const t = document.createElement("input");
+      t.className = "titulo";
+      t.placeholder = "Nome do bloco";
+      t.value = b.titulo;
+      t.oninput = () => { b.titulo = t.value; salvar(); };
+
+      const sel = document.createElement("select");
+      [["despesa","📉 Despesa"],["receita","📈 Receita"]].forEach(([val, txt]) => {
+        const o = document.createElement("option");
+        o.value = val; o.textContent = txt;
+        if (b.tipo === val) o.selected = true;
+        sel.append(o);
+      });
+      sel.onchange = () => { b.tipo = sel.value; salvar(); render(); };
+
+      const delB = document.createElement("button");
+      delB.className = "del";
+      delB.textContent = "🗑";
+      delB.title = "Apagar bloco";
+      delB.onclick = () => {
+        if (confirm('Apagar o bloco "' + (b.titulo || "sem nome") + '"?')) {
+          m.blocos.splice(bi, 1); salvar(); render();
+        }
+      };
+      head.append(t, sel, delB);
+      card.append(head);
+
+      // Itens
+      b.itens.forEach((item, i) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const n = document.createElement("input");
+        n.className = "nome";
+        n.placeholder = "Nome";
+        n.value = item.nome;
+        n.oninput = () => { item.nome = n.value; salvar(); };
+
+        const v = document.createElement("input");
+        v.className = "valor";
+        v.type = "number";
+        v.step = "0.01";
+        v.inputMode = "decimal";
+        v.value = item.valor;
+
+        const tot = document.createElement("span"); // preenchido abaixo
+        v.oninput = () => {
+          item.valor = v.value === "" ? 0 : parseFloat(v.value);
+          salvar();
+          atualizaTotalBloco();
+          totais();
+        };
+
+        const d = document.createElement("button");
+        d.className = "del";
+        d.textContent = "✕";
+        d.title = "Apagar item";
+        d.onclick = () => { b.itens.splice(i, 1); salvar(); render(); };
+
+        row.append(n, v, d);
+        card.append(row);
+      });
+
+      const add = document.createElement("button");
+      add.className = "add";
+      add.textContent = "+ Adicionar item";
+      add.onclick = () => {
+        b.itens.push({nome:"", valor:0});
+        salvar();
+        render();
+        const nomes = document.querySelectorAll("#blocos .card")[bi].querySelectorAll(".nome");
+        nomes[nomes.length - 1].focus();
+      };
+      card.append(add);
+
+      const totalRow = document.createElement("div");
+      totalRow.className = "total";
+      const lbl = document.createElement("span");
+      lbl.textContent = "Total";
+      const val = document.createElement("span");
+      totalRow.append(lbl, val);
+      card.append(totalRow);
+
+      function atualizaTotalBloco() {
+        val.textContent = brl(soma(b.itens));
+        val.className = b.tipo === "receita" ? "pos" : "neg";
+      }
+      atualizaTotalBloco();
+
+      box.append(card);
+    });
+
+    // Botão de copiar do mês anterior (só quando o mês está vazio)
+    const cp = document.getElementById("copiar");
+    cp.innerHTML = "";
+    if (m.blocos.length === 0) {
+      let pa = ano, pm = mes - 1;
+      if (pm < 0) { pm = 11; pa--; }
+      const ant = dados.meses[chave(pa, pm)];
+      if (ant && ant.blocos.length > 0) {
+        const btn = document.createElement("button");
+        btn.className = "add";
+        btn.textContent = "📋 Copiar do mês anterior (" + MESES[pm] + ")";
+        btn.onclick = () => { m.blocos = clone(ant.blocos); salvar(); render(); };
+        cp.append(btn);
+      }
+    }
+
+    totais();
+  }
+
+  function novoBloco() {
+    const nome = prompt("Nome do novo bloco (ex.: Cartão, Extras, Freelas):");
+    if (nome === null) return;
+    const ehReceita = confirm("Esse bloco é de RECEITA?\n\nOK = Receita\nCancelar = Despesa");
+    atual().blocos.push({titulo:nome.trim(), tipo: ehReceita ? "receita" : "despesa", itens:[]});
+    salvar();
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>
