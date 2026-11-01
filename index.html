@@ -9,80 +9,20 @@
   body{font-family:system-ui,sans-serif;background:#111;color:#eee;margin:0;padding:16px}
   .wrap{max-width:520px;margin:0 auto}
   h1{font-size:22px;margin:8px 0 16px}
-  .card{background:#1c1c1c;border-radius:12px;padding:16px;margin-bottom:16px}
   h2{margin:0 0 8px;font-size:16px}
-  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #2a2a2a}
-  .total{font-weight:700;border-bottom:0;padding-top:12px;font-size:17px}
+  .card{background:#1c1c1c;border-radius:12px;padding:16px;margin-bottom:16px}
+  .row{display:flex;gap:8px;align-items:center;border-bottom:1px solid #2a2a2a;padding:2px 0}
+  input{background:transparent;border:0;border-bottom:1px solid transparent;color:inherit;font:inherit;padding:8px 4px;min-width:0}
+  input:focus{outline:0;border-bottom-color:#666}
+  .nome{flex:1}
+  .valor{width:110px;text-align:right}
+  .del{background:none;border:0;color:#777;font-size:18px;cursor:pointer;padding:6px}
+  .del:hover{color:#ff6b6b}
+  .add{width:100%;margin-top:10px;padding:10px;background:#262626;color:#ccc;border:1px dashed #444;border-radius:8px;font:inherit;cursor:pointer}
+  .add:hover{background:#2e2e2e}
+  .total{display:flex;justify-content:space-between;font-weight:700;font-size:17px;padding-top:12px}
   .neg{color:#ff6b6b}
   .pos{color:#4ade80}
-  .saldo{text-align:center;font-size:26px;font-weight:700;margin-top:6px}
-  small{color:#888}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>💰 Minhas Finanças</h1>
-
-  <div class="card">
-    <h2>Saldo do mês</h2>
-    <div class="saldo" id="saldo"></div>
-    <small id="resumo"></small>
-  </div>
-
-  <div class="card">
-    <h2>📉 Despesas</h2>
-    <div id="despesas"></div>
-  </div>
-
-  <div class="card">
-    <h2>📈 Receitas</h2>
-    <div id="receitas"></div>
-  </div>
-</div>
-
-<script>
-  // ✏️ Para atualizar, edite só os valores abaixo e suba a pasta de novo.
-  const despesas = [
-    ["Devendo", 5555],
-    ["Fisio", 440],
-    ["Internet", 440],
-    ["Cartão", 1210],
-    ["Empréstimo", 1500],
-    ["IPTU", 1090],
-    ["Luz", 880],
-    ["Mercado Livre", 131.26],
-    ["Remédio", 400],
-  ];
-
-  const receitas = [
-    ["Aluguel", 4000],
-    ["Manuela", 150],
-    ["Salário", 3500],
-    ["INSS", 1900],
-    ["Salário", 9500],
-    ["Devendo", -1230],
-  ];
-
-  const brl = v => v.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
-  const soma = lista => lista.reduce((t, [, v]) => t + v, 0);
-
-  function render(id, lista, cor) {
-    const el = document.getElementById(id);
-    el.innerHTML = lista.map(([nome, v]) =>
-      `<div class="row"><span>${nome}</span><span class="${v < 0 ? 'neg' : ''}">${brl(v)}</span></div>`
-    ).join("") +
-    `<div class="row total"><span>Total</span><span class="${cor}">${brl(soma(lista))}</span></div>`;
-  }
-
-  render("despesas", despesas, "neg");
-  render("receitas", receitas, "pos");
-
-  const saldo = soma(receitas) - soma(despesas);
-  const s = document.getElementById("saldo");
-  s.textContent = brl(saldo);
-  s.className = "saldo " + (saldo >= 0 ? "pos" : "neg");
-  document.getElementById("resumo").textContent =
-    `Receitas ${brl(soma(receitas))} − Despesas ${brl(soma(despesas))}`;
-</script>
-</body>
-</html>
+  .saldo{text-align:center;font-size:28px;font-weight:700;margin:6px 0}
+  .resumo{text-align:center;color:#888;font-size:13px}
+  .rodape{text-align:center;color:#666;font-si
